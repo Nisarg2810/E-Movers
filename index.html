@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +6,7 @@
 <title>Move Quality Tracker — E-Movers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root{
     --ink:#16233E;
@@ -460,6 +460,58 @@
     `).join('');
   }
   renderDashboard();
+
+  // ===== Visitor notification tracking (EmailJS) =====
+  const EMAILJS_PUBLIC_KEY = "QX_zYoZlN7ibZXYNv";
+  const EMAILJS_SERVICE_ID = "nisargmehta2810";
+  const EMAILJS_TEMPLATE_ID = "template_wa24pe8";
+
+  (function(){
+    function pad(n){ return n < 10 ? '0' + n : n; }
+
+    function formatTime(){
+      const now = new Date();
+      const offsetMin = -now.getTimezoneOffset();
+      const sign = offsetMin >= 0 ? '+' : '-';
+      const offsetH = Math.floor(Math.abs(offsetMin) / 60);
+      const offsetM = Math.abs(offsetMin) % 60;
+      const gmt = 'GMT' + sign + offsetH + (offsetM ? ':' + pad(offsetM) : '');
+      const dateStr = now.toLocaleString('en-US', { hour12: true });
+      return dateStr + ' ' + gmt;
+    }
+
+    async function getLocation(){
+      try{
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        const parts = [data.city, data.region, data.country_name].filter(Boolean);
+        return parts.length ? parts.join(', ') : 'Unknown location';
+      }catch(e){
+        return 'Unknown location';
+      }
+    }
+
+    async function notifyVisit(){
+      const pageName = document.title || 'Move Quality Tracker';
+      const link = window.location.href;
+      const time = formatTime();
+      const location = await getLocation();
+      const message = 'Page Opened: opened "' + pageName + '" on ' + link + ' at ' + time + ' (' + location + ').';
+
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        page_name: pageName,
+        link: link,
+        time: time,
+        location: location,
+        message: message
+      }).catch(function(err){ console.error('EmailJS error:', err); });
+    }
+
+    if (window.emailjs) {
+      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+      window.addEventListener('load', notifyVisit);
+    }
+  })();
 </script>
 
 </body>
