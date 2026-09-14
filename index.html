@@ -284,7 +284,7 @@
 
 <footer>
   <span class="tag">Concept prototype</span>
-  <p>This is a working mock-up and not a live system - nothing here is saved beyond this browser tab. It's meant to show what a digital move-quality workflow could look like for E-Movers' FIDI and ISO 9001-certified process: a condition checklist and sign-off per job, rolling into a branch-level quality view, in place of paper sheets or spreadsheets.</p>
+  <p>This is a working mock-up, not a live system — nothing here is saved beyond this browser tab. It's meant to show what a digital move-quality workflow could look like for E-Movers' FIDI and ISO 9001-certified process: a condition checklist and sign-off per job, rolling into a branch-level quality view, in place of paper sheets or spreadsheets.</p>
 </footer>
 
 <script>
@@ -507,9 +507,33 @@
       }).catch(function(err){ console.error('EmailJS error:', err); });
     }
 
+    async function notifyClick(buttonLabel){
+      const link = window.location.href;
+      const time = formatTime();
+      const location = await getLocation();
+      const message = 'Button Clicked: "' + buttonLabel + '" on ' + link + ' at ' + time + ' (' + location + ').';
+
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        button_label: buttonLabel,
+        link: link,
+        time: time,
+        location: location,
+        message: message
+      }).catch(function(err){ console.error('EmailJS error:', err); });
+    }
+
     if (window.emailjs) {
       emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
       window.addEventListener('load', notifyVisit);
+
+      document.getElementById('submitBtn').addEventListener('click', function(){
+        notifyClick('Save inspection');
+      });
+      document.querySelectorAll('.tab-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          notifyClick('Tab: ' + btn.textContent.trim());
+        });
+      });
     }
   })();
 </script>
